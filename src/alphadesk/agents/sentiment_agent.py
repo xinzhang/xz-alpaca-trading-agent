@@ -6,9 +6,7 @@ from typing import Any
 
 from alphadesk.agents.base import AgentNode
 from alphadesk.clients.openai_client import OpenAIClient
-from alphadesk.clients.pinecone_client import PineconeNewsStore
-from alphadesk.clients.redis_bus import EventBus
-from alphadesk.clients.tavily_client import TavilyNewsClient
+from alphadesk.clients.protocols import EventPublisher, NewsSource, VectorStore
 from alphadesk.db.base import Database
 from alphadesk.state import PipelineState, SentimentResult
 
@@ -36,10 +34,10 @@ class SentimentAgent(AgentNode):
     def __init__(
         self,
         db: Database,
-        event_bus: EventBus,
-        tavily: TavilyNewsClient,
+        event_bus: EventPublisher,
+        tavily: NewsSource,
         openai: OpenAIClient,
-        pinecone: PineconeNewsStore,
+        pinecone: VectorStore,
     ) -> None:
         super().__init__(db, event_bus)
         self._tavily = tavily

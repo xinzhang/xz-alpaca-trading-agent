@@ -6,6 +6,7 @@ __pycache__/
 .ruff_cache/
 uv.lock
 reports/
+backtest_results/
 *.egg-info/
 
 # frontend

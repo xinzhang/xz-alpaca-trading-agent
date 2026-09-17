@@ -11,7 +11,7 @@ from typing import Any
 from alphadesk.agents.base import AgentNode
 from alphadesk.clients.alpaca_client import PositionSnapshot
 from alphadesk.clients.openai_client import OpenAIClient
-from alphadesk.clients.redis_bus import EventBus
+from alphadesk.clients.protocols import EventPublisher
 from alphadesk.db.base import Database
 from alphadesk.state import DecisionResult, PipelineState
 
@@ -39,7 +39,7 @@ _SYSTEM_PROMPT = (
 class DecisionAgent(AgentNode):
     name = "decision"
 
-    def __init__(self, db: Database, event_bus: EventBus, openai: OpenAIClient) -> None:
+    def __init__(self, db: Database, event_bus: EventPublisher, openai: OpenAIClient) -> None:
         super().__init__(db, event_bus)
         self._openai = openai
 

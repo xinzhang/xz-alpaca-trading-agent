@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 from alpaca.trading.enums import OrderSide
 
 from alphadesk.agents.base import AgentNode
-from alphadesk.clients.alpaca_client import AlpacaClient
-from alphadesk.clients.redis_bus import EventBus
+from alphadesk.clients.broker_protocol import Broker
+from alphadesk.clients.protocols import EventPublisher
 from alphadesk.config import Settings
 from alphadesk.db.base import Database
 from alphadesk.db.models import Decision, TradeFill
@@ -20,7 +20,7 @@ class ExecutionAgent(AgentNode):
     name = "execution"
 
     def __init__(
-        self, db: Database, event_bus: EventBus, alpaca: AlpacaClient, settings: Settings
+        self, db: Database, event_bus: EventPublisher, alpaca: Broker, settings: Settings
     ) -> None:
         super().__init__(db, event_bus)
         self._alpaca = alpaca

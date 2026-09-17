@@ -1,8 +1,8 @@
 """Signal Node ("the Quant"): technical analysis per ticker from Alpaca OHLCV bars."""
 
 from alphadesk.agents.base import AgentNode
-from alphadesk.clients.alpaca_client import AlpacaClient
-from alphadesk.clients.redis_bus import EventBus
+from alphadesk.clients.broker_protocol import Broker
+from alphadesk.clients.protocols import EventPublisher
 from alphadesk.db.base import Database
 from alphadesk.indicators import compute_snapshot
 from alphadesk.state import PipelineState
@@ -11,7 +11,7 @@ from alphadesk.state import PipelineState
 class SignalAgent(AgentNode):
     name = "signal"
 
-    def __init__(self, db: Database, event_bus: EventBus, alpaca: AlpacaClient) -> None:
+    def __init__(self, db: Database, event_bus: EventPublisher, alpaca: Broker) -> None:
         super().__init__(db, event_bus)
         self._alpaca = alpaca
 
