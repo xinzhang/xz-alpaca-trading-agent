@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -60,4 +61,10 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    # pydantic-settings' default precedence puts real OS environment variables ABOVE
+    # the .env file — so a same-named var exported globally in the user's shell profile
+    # (e.g. ~/.zshrc, for an unrelated project) would silently win over this project's
+    # .env. For a trading app, "silently using the wrong account's API key" is a real
+    # safety issue, not a cosmetic one — force this project's .env to take precedence.
+    load_dotenv(".env", override=True)
     return Settings()
