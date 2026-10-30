@@ -8,5 +8,5 @@ COPY src ./src
 
 RUN uv sync --no-dev
 
-EXPOSE 8000
+EXPOSE 8682
 CMD ["uv", "run", "python", "-m", "alphadesk.main"]

@@ -1,6 +1,6 @@
 import type { Account, Decision, Health, LogEntry, PortfolioPoint, Position } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8682";
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
@@ -21,6 +21,6 @@ export const api = {
 };
 
 export function wsUrl(): string {
-  const base = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8682";
   return `${base}/ws`;
 }

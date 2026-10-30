@@ -42,7 +42,7 @@ uv sync
 docker compose up -d timescaledb redis   # Postgres mapped to host 5433, not 5432, to
                                           # avoid clashing with any other local Postgres
 uv run python scripts/init_db.py
-uv run python -m alphadesk.main       # backend on :8001 (PORT in .env; 8000 was taken)
+uv run python -m alphadesk.main       # backend on :8682 (PORT in .env)
 ```
 
 To force one pipeline cycle immediately, ignoring market hours (useful for testing):
@@ -57,7 +57,7 @@ Frontend:
 cd frontend
 cp .env.local.example .env.local       # points at the backend's port
 npm install
-npm run dev                            # dashboard on :3000
+npm run dev                            # dashboard on :8681
 ```
 
 Or run everything (backend + frontend + infra) via `docker compose up --build`.

@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     dry_run: bool = Field(default=True, alias="DRY_RUN")
 
     # Server
-    port: int = Field(default=8002, alias="PORT")
+    port: int = Field(default=8682, alias="PORT")
 
     @property
     def ticker_list(self) -> list[str]:

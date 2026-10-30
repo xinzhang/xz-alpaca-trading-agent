@@ -7,5 +7,5 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-EXPOSE 3008
+EXPOSE 8681
 CMD ["npm", "start"]

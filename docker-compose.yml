@@ -39,19 +39,19 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${PORT:-8002}:${PORT:-8002}"
+      - "${PORT:-8682}:${PORT:-8682}"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:${PORT:-8002}
-      NEXT_PUBLIC_WS_URL: ws://localhost:${PORT:-8002}
+      NEXT_PUBLIC_API_URL: http://localhost:${PORT:-8682}
+      NEXT_PUBLIC_WS_URL: ws://localhost:${PORT:-8682}
     depends_on:
       - backend
     ports:
-      - "3008:3008"
+      - "8681:8681"
 
 volumes:
   postgres_data:
