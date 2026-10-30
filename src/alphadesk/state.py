@@ -32,6 +32,7 @@ class SentimentResult:
     label: Literal["bullish", "bearish", "neutral"]
     score: float  # -1.0 (very bearish) .. +1.0 (very bullish)
     headlines: list[str] = field(default_factory=list)
+    rationale: str | None = None
 
 
 @dataclass(slots=True)

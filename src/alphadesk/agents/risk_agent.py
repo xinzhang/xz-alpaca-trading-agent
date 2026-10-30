@@ -10,13 +10,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 
 from alphadesk.agents.base import AgentNode
+from alphadesk.clients.alpaca_client import PositionSnapshot
 from alphadesk.clients.broker_protocol import Broker
 from alphadesk.clients.protocols import EventPublisher
 from alphadesk.config import Settings
 from alphadesk.db.base import Database
 from alphadesk.db.models import PortfolioSnapshot
 from alphadesk.risk_rules import compute_risk_budget
-from alphadesk.state import PipelineState
+from alphadesk.state import PipelineState, RiskBudget
 
 
 class RiskAgent(AgentNode):
@@ -37,13 +38,17 @@ class RiskAgent(AgentNode):
             row = result.scalar_one_or_none()
             return row if row is not None else fallback
 
-    async def run(self, state: PipelineState) -> PipelineState:
+    async def observe(self) -> tuple[dict[str, PositionSnapshot], RiskBudget]:
+        """Reads account state and computes the budget without persisting anything."""
         account = self._alpaca.get_account()
         positions = self._alpaca.get_positions()
-        state.positions = positions
-
         prior_peak = await self._last_peak_equity(fallback=account.equity)
-        budget = compute_risk_budget(account, positions, prior_peak, self._settings)
+        return positions, compute_risk_budget(account, positions, prior_peak, self._settings)
+
+    async def run(self, state: PipelineState) -> PipelineState:
+        positions, budget = await self.observe()
+        account = budget.account
+        state.positions = positions
         state.risk_budget = budget
 
         async with self._db.session() as session:

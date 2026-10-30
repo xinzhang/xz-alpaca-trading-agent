@@ -4,7 +4,7 @@ from alphadesk.agents.base import AgentNode
 from alphadesk.clients.broker_protocol import Broker
 from alphadesk.clients.protocols import EventPublisher
 from alphadesk.db.base import Database
-from alphadesk.indicators import compute_snapshot
+from alphadesk.indicators import TechnicalSnapshot, compute_snapshot
 from alphadesk.state import PipelineState
 
 
@@ -15,13 +15,19 @@ class SignalAgent(AgentNode):
         super().__init__(db, event_bus)
         self._alpaca = alpaca
 
+    def compute(self, ticker: str) -> tuple[TechnicalSnapshot | None, int]:
+        """Side-effect-free: (snapshot, bar count), or (None, 0) when no bars came back."""
+        bars = self._alpaca.get_recent_bars(ticker)
+        if bars.empty:
+            return None, 0
+        return compute_snapshot(bars), len(bars)
+
     async def run(self, state: PipelineState) -> PipelineState:
         for ticker in state.tickers:
-            bars = self._alpaca.get_recent_bars(ticker)
-            if bars.empty:
+            snapshot, _ = self.compute(ticker)
+            if snapshot is None:
                 await self._log("no bars returned, skipping ticker", ticker=ticker)
                 continue
-            snapshot = compute_snapshot(bars)
             state.ticker_states[ticker].technical = snapshot
             await self._log(
                 "computed technical snapshot",

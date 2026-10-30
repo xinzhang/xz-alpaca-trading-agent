@@ -66,7 +66,7 @@ class DecisionAgent(AgentNode):
             f"unrealized_pl=${position.unrealized_pl:.2f}"
         )
 
-    def _build_prompt(self, state: PipelineState, ticker: str) -> str:
+    def build_prompt(self, state: PipelineState, ticker: str) -> str:
         ts = state.ticker_states[ticker]
         technical, sentiment = ts.technical, ts.sentiment
         position = state.positions.get(ticker)
@@ -87,6 +87,20 @@ class DecisionAgent(AgentNode):
             f"account_buying_power=${budget.account.buying_power:.2f}"
         )
 
+    def decide(self, state: PipelineState, ticker: str) -> DecisionResult:
+        """One LLM call; requires that ticker's technical + sentiment already be set."""
+        raw = self._openai.decide(
+            system_prompt=_SYSTEM_PROMPT,
+            user_prompt=self.build_prompt(state, ticker),
+            json_schema=_DECISION_SCHEMA,
+        )
+        return DecisionResult(
+            action=raw["action"],
+            confidence=float(raw["confidence"]),
+            rationale=raw["rationale"],
+            target_notional=raw["target_notional"],
+        )
+
     async def run(self, state: PipelineState) -> PipelineState:
         for ticker in state.tickers:
             ts = state.ticker_states[ticker]
@@ -97,22 +111,12 @@ class DecisionAgent(AgentNode):
                 )
                 continue
 
-            raw = self._openai.decide(
-                system_prompt=_SYSTEM_PROMPT,
-                user_prompt=self._build_prompt(state, ticker),
-                json_schema=_DECISION_SCHEMA,
-            )
-            ts.decision = DecisionResult(
-                action=raw["action"],
-                confidence=float(raw["confidence"]),
-                rationale=raw["rationale"],
-                target_notional=raw["target_notional"],
-            )
+            ts.decision = self.decide(state, ticker)
             await self._log(
                 "decided",
                 ticker=ticker,
-                action=raw["action"],
-                confidence=raw["confidence"],
-                rationale=raw["rationale"],
+                action=ts.decision.action,
+                confidence=ts.decision.confidence,
+                rationale=ts.decision.rationale,
             )
         return state

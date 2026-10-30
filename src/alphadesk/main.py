@@ -22,6 +22,7 @@ def main() -> None:
         container.event_bus,
         container.alpaca,
         container.scheduler,
+        container.analyzer,
     )
 
     uvicorn.run(app, host="0.0.0.0", port=settings.port)  # noqa: S104 - intentional container bind

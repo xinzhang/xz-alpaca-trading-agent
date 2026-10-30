@@ -11,6 +11,7 @@ from alphadesk.agents.execution_agent import ExecutionAgent
 from alphadesk.agents.risk_agent import RiskAgent
 from alphadesk.agents.sentiment_agent import SentimentAgent
 from alphadesk.agents.signal_agent import SignalAgent
+from alphadesk.analysis import SymbolAnalyzer
 from alphadesk.clients.alpaca_client import AlpacaClient
 from alphadesk.clients.openai_client import OpenAIClient
 from alphadesk.clients.pinecone_client import PineconeNewsStore
@@ -30,6 +31,7 @@ class Container:
     alpaca: AlpacaClient
     pipeline: TradingPipeline
     scheduler: Scheduler
+    analyzer: SymbolAnalyzer
 
 
 def build_container(settings: Settings) -> Container:
@@ -51,8 +53,11 @@ def build_container(settings: Settings) -> Container:
         signal_agent, risk_agent, sentiment_agent, decision_agent, execution_agent
     )
     scheduler = Scheduler(pipeline, alpaca, event_bus, settings)
+    analyzer = SymbolAnalyzer(
+        settings, signal_agent, risk_agent, sentiment_agent, decision_agent, openai
+    )
 
     return Container(
         settings=settings, db=db, event_bus=event_bus, alpaca=alpaca, pipeline=pipeline,
-        scheduler=scheduler,
+        scheduler=scheduler, analyzer=analyzer,
     )

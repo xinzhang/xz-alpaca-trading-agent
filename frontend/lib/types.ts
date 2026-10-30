@@ -52,3 +52,59 @@ export interface LiveEvent {
   type: "agent_log" | "cycle_complete";
   payload: Record<string, unknown>;
 }
+
+export interface AnalysisResult {
+  symbol: string;
+  ts: string;
+  signal: {
+    bar_count: number;
+    technical: {
+      last_price: number;
+      rsi_14: number | null;
+      sma_20: number | null;
+      ema_20: number | null;
+      bollinger_upper: number | null;
+      bollinger_lower: number | null;
+    };
+    observations: string[];
+  };
+  risk: {
+    equity: number;
+    buying_power: number;
+    drawdown_pct: number;
+    trading_halted: boolean;
+    halt_reason: string | null;
+    max_position_notional: number;
+    remaining_exposure: number;
+    position: Omit<Position, "ticker"> & { symbol: string } | null;
+    observations: string[];
+  };
+  sentiment: {
+    label: SentimentLabel;
+    score: number;
+    rationale: string | null;
+    headlines: string[];
+    articles: { title: string; url: string; published_at: string | null }[];
+  };
+  decision: {
+    action: Action;
+    confidence: number;
+    rationale: string;
+    target_notional: number | null;
+    prompt: string;
+  };
+  risk_check: {
+    approved: boolean;
+    reason: string | null;
+    approved_notional: number | null;
+    would_trade: boolean;
+  };
+  summary: {
+    headline: string;
+    summary: string;
+    bull_case: string[];
+    bear_case: string[];
+    key_risks: string[];
+    what_would_change_the_call: string[];
+  };
+}

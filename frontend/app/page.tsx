@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { usePolledData } from "@/lib/usePolledData";
 import { useLiveEvents } from "@/lib/useLiveEvents";
@@ -9,6 +9,7 @@ import { EquityChart } from "@/components/EquityChart";
 import { PositionsTable } from "@/components/PositionsTable";
 import { DecisionsTable } from "@/components/DecisionsTable";
 import { LiveLogFeed } from "@/components/LiveLogFeed";
+import { AnalysisDialog } from "@/components/AnalysisDialog";
 import type { LogEntry } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -19,6 +20,8 @@ export default function DashboardPage() {
   const portfolioHistory = usePolledData(() => api.portfolioHistory(200), 30_000);
   const historicalLogs = usePolledData(() => api.logs(100), 20_000);
   const { connected, events } = useLiveEvents();
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const closeAnalysis = useCallback(() => setAnalysisOpen(false), []);
 
   const liveLogs: LogEntry[] = useMemo(
     () =>
@@ -45,7 +48,7 @@ export default function DashboardPage() {
     <main className="page">
       <div className="topbar">
         <div className="title">AlphaDesk Console</div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {health.data && (
             <span className="badge">{health.data.dry_run ? "DRY RUN" : "LIVE PAPER"}</span>
           )}
@@ -53,6 +56,19 @@ export default function DashboardPage() {
             <span className={`dot ${connected ? "on" : "off"}`} />
             {connected ? "live" : "reconnecting…"}
           </span>
+          <button
+            className="icon-button"
+            onClick={() => setAnalysisOpen(true)}
+            aria-label="Analyze a symbol"
+            title="Analyze a symbol"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="7" />
+              <path d="M21 21l-5.5-5.5" />
+              <path d="M7 12.5l2.5-2.5 2 2 2.5-3" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -80,6 +96,12 @@ export default function DashboardPage() {
         <h2>Agent activity</h2>
         <LiveLogFeed logs={mergedLogs} />
       </div>
+      {analysisOpen && (
+        <AnalysisDialog
+          onClose={closeAnalysis}
+          suggestions={health.data?.tickers ?? []}
+        />
+      )}
     </main>
   );
 }

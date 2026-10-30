@@ -4,12 +4,15 @@ Redis pub/sub events to connected browser clients in real time.
 
 import asyncio
 import logging
+import re
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy import select
 
+from alphadesk.analysis import SymbolAnalyzer
 from alphadesk.clients.alpaca_client import AlpacaClient
 from alphadesk.clients.redis_bus import EventBus
 from alphadesk.config import Settings, get_settings
@@ -19,6 +22,12 @@ from alphadesk.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
+_SYMBOL_RE = re.compile(r"^[A-Z][A-Z.]{0,9}$")
+
+
+class AnalyzeRequest(BaseModel):
+    symbol: str
+
 
 def create_app(
     settings: Settings,
@@ -26,6 +35,7 @@ def create_app(
     event_bus: EventBus,
     alpaca: AlpacaClient,
     scheduler: Scheduler,
+    analyzer: SymbolAnalyzer,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -128,6 +138,20 @@ def create_app(
             for row in reversed(rows)
         ]
 
+    @app.post("/api/analyze")
+    async def analyze(request: AnalyzeRequest):
+        symbol = request.symbol.strip().upper()
+        if not _SYMBOL_RE.match(symbol):
+            raise HTTPException(status_code=422, detail=f"invalid symbol: {request.symbol!r}")
+        try:
+            result = await analyzer.analyze(symbol)
+        except Exception as exc:
+            logger.exception("analysis failed for %s", symbol)
+            raise HTTPException(status_code=502, detail=f"analysis failed: {exc}") from exc
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"no market data for {symbol}")
+        return result
+
     @app.websocket("/ws")
     async def ws_endpoint(websocket: WebSocket):
         await websocket.accept()
@@ -153,5 +177,6 @@ def build_default_app() -> FastAPI:
 
     container = build_container(get_settings())
     return create_app(
-        container.settings, container.db, container.event_bus, container.alpaca, container.scheduler
+        container.settings, container.db, container.event_bus, container.alpaca,
+        container.scheduler, container.analyzer,
     )
