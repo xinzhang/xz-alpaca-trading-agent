@@ -59,7 +59,7 @@ def test_evaluate_order_sell_without_position_is_rejected():
     assert not verdict.approved
 
 
-def test_evaluate_order_sell_closes_the_whole_position_by_qty():
+def test_evaluate_order_sell_with_no_target_closes_the_whole_position():
     positions = {"AAPL": PositionSnapshot("AAPL", 10, 4_000, 400, 0)}
     budget = compute_risk_budget(_account(100_000), positions, 100_000, _settings())
     decision = DecisionResult(action="SELL", confidence=1.0, rationale="")
@@ -67,7 +67,45 @@ def test_evaluate_order_sell_closes_the_whole_position_by_qty():
     verdict = evaluate_order(budget, "AAPL", positions, decision, "SELL")
 
     assert verdict.approved
-    assert verdict.approved_qty == pytest.approx(10)
+    assert verdict.approved_notional == pytest.approx(4_000)
+
+
+def test_evaluate_order_sell_with_partial_target_trims_not_closes():
+    positions = {"AAPL": PositionSnapshot("AAPL", 10, 4_000, 400, 0)}
+    budget = compute_risk_budget(_account(100_000), positions, 100_000, _settings())
+    decision = DecisionResult(
+        action="SELL", confidence=0.6, rationale="", target_notional=1_500
+    )
+
+    verdict = evaluate_order(budget, "AAPL", positions, decision, "SELL")
+
+    assert verdict.approved
+    assert verdict.approved_notional == pytest.approx(2_500)  # trims 4_000 -> 1_500
+
+
+def test_evaluate_order_sell_is_a_noop_when_target_is_above_current_value():
+    positions = {"AAPL": PositionSnapshot("AAPL", 10, 4_000, 400, 0)}
+    budget = compute_risk_budget(_account(100_000), positions, 100_000, _settings())
+    decision = DecisionResult(
+        action="SELL", confidence=0.5, rationale="", target_notional=6_000
+    )
+
+    verdict = evaluate_order(budget, "AAPL", positions, decision, "SELL")
+
+    assert verdict.approved
+    assert verdict.approved_notional is None
+
+
+def test_evaluate_order_buy_is_a_noop_when_target_already_met():
+    positions = {"AAPL": PositionSnapshot("AAPL", 10, 10_000, 1_000, 0)}
+    budget = compute_risk_budget(_account(100_000), positions, 100_000, _settings())
+    decision = DecisionResult(
+        action="BUY", confidence=0.5, rationale="", target_notional=8_000
+    )
+
+    verdict = evaluate_order(budget, "AAPL", positions, decision, "BUY")
+
+    assert verdict.approved
     assert verdict.approved_notional is None
 
 

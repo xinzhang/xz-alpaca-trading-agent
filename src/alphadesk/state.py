@@ -46,8 +46,7 @@ class DecisionResult:
 class RiskVerdict:
     approved: bool
     reason: str | None
-    approved_notional: float | None = None  # BUY sizing, in dollars
-    approved_qty: float | None = None  # SELL sizing, in shares (closes the whole position)
+    approved_notional: float | None = None  # sizing in dollars, BUY or SELL, toward the target
 
 
 @dataclass(slots=True)

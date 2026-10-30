@@ -39,9 +39,9 @@ class ExecutionAgent(AgentNode):
             ts.risk_verdict = verdict
 
             order_id = None
-            if verdict.approved and ts.decision.action != "HOLD":
+            if verdict.approved and verdict.approved_notional:
                 order_id = await self._submit(
-                    ticker, ts.decision.action, verdict.approved_notional, verdict.approved_qty
+                    ticker, ts.decision.action, verdict.approved_notional
                 )
                 ts.executed = True
                 ts.order_id = order_id
@@ -57,18 +57,13 @@ class ExecutionAgent(AgentNode):
             )
         return state
 
-    async def _submit(
-        self, ticker: str, action: str, notional: float | None, qty: float | None
-    ) -> str:
+    async def _submit(self, ticker: str, action: str, notional: float) -> str:
         side = OrderSide.BUY if action == "BUY" else OrderSide.SELL
 
         if self._settings.dry_run:
             order_id = f"DRY-{ticker}-{datetime.now(UTC).timestamp():.0f}"
-        elif action == "BUY":
-            order = self._alpaca.submit_market_order(ticker, side, notional=notional)
-            order_id = str(order.id)
         else:
-            order = self._alpaca.submit_market_order(ticker, side, qty=qty)
+            order = self._alpaca.submit_market_order(ticker, side, notional=notional)
             order_id = str(order.id)
 
         async with self._db.session() as session:
@@ -77,8 +72,8 @@ class ExecutionAgent(AgentNode):
                     ts=datetime.now(UTC),
                     ticker=ticker,
                     side=side.value,
-                    qty=qty if action != "BUY" else None,
-                    notional=notional if action == "BUY" else None,
+                    qty=None,
+                    notional=notional,
                     order_id=order_id,
                     dry_run=self._settings.dry_run,
                 )

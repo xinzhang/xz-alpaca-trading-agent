@@ -49,6 +49,12 @@ def evaluate_order(
     decision: DecisionResult,
     action: Action,
 ) -> RiskVerdict:
+    """`decision.target_notional` is the desired TOTAL position value after this
+    decision, for both BUY and SELL — not an incremental amount. Direction always
+    comes from `action`, never from the sign of the computed delta: a BUY whose
+    target is already met, or a SELL whose target is already undercut, is a no-op
+    rather than a trade in the opposite direction.
+    """
     if action == "HOLD":
         return RiskVerdict(approved=True, reason=None)
 
@@ -56,27 +62,39 @@ def evaluate_order(
         position = positions.get(ticker)
         if position is None:
             return RiskVerdict(approved=False, reason="no existing position to sell")
-        # Closing the whole position frees that much exposure budget for tickers still
-        # to come in this same cycle.
-        budget.remaining_exposure += position.market_value
-        return RiskVerdict(approved=True, reason=None, approved_qty=position.qty)
+
+        current_value = position.market_value
+        # No stated target defaults to a full exit, same as before this change.
+        target = max(0.0, min(decision.target_notional or 0.0, current_value))
+        delta = target - current_value
+        if delta >= 0:
+            return RiskVerdict(approved=True, reason="already at or below target")
+
+        sell_notional = min(-delta, current_value)
+        # Frees that much exposure budget for tickers still to come in this cycle.
+        budget.remaining_exposure += sell_notional
+        return RiskVerdict(approved=True, reason=None, approved_notional=sell_notional)
 
     # action == "BUY"
     if budget.trading_halted:
         return RiskVerdict(approved=False, reason=budget.halt_reason)
 
+    current_position = positions.get(ticker)
+    current_value = current_position.market_value if current_position else 0.0
+
+    # The cap always wins, regardless of what the model asked for.
     requested = decision.target_notional or budget.max_position_notional
-    current_position_value = positions.get(ticker)
-    current_value = current_position_value.market_value if current_position_value else 0.0
+    target = min(requested, budget.max_position_notional)
+    delta = target - current_value
+    if delta <= 0:
+        return RiskVerdict(approved=True, reason="target already met")
 
-    room_in_position = max(0.0, budget.max_position_notional - current_value)
-    approved_notional = min(requested, room_in_position, budget.remaining_exposure)
-
+    approved_notional = min(delta, budget.remaining_exposure)
     if approved_notional <= 0:
         return RiskVerdict(
             approved=False,
             reason=(
-                f"no capacity: position_room=${room_in_position:.2f}, "
+                f"no capacity: position_room=${delta:.2f}, "
                 f"exposure_room=${budget.remaining_exposure:.2f}"
             ),
         )

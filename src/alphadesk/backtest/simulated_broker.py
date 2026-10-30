@@ -97,10 +97,17 @@ class SimulatedBroker:
                 )
             self._cash -= notional
         else:
-            if qty is None:
-                raise ValueError("simulated SELL requires qty")
-            self._cash += qty * price
-            del self._positions[symbol]
+            if notional is None:
+                raise ValueError("simulated SELL requires notional")
+            existing = self._positions[symbol]
+            sold_qty = notional / price
+            if sold_qty >= existing.qty - 1e-9:  # full close, allow float slop
+                del self._positions[symbol]
+            else:
+                self._positions[symbol] = _SimPosition(
+                    qty=existing.qty - sold_qty, avg_entry_price=existing.avg_entry_price
+                )
+            self._cash += notional
 
         self._order_seq += 1
         return SimOrder(id=f"SIM-{self._order_seq}")

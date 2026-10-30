@@ -21,7 +21,16 @@ _DECISION_SCHEMA: dict[str, Any] = {
         "action": {"type": "string", "enum": ["BUY", "SELL", "HOLD"]},
         "confidence": {"type": "number"},
         "rationale": {"type": "string"},
-        "target_notional": {"type": ["number", "null"]},
+        "target_notional": {
+            "type": ["number", "null"],
+            "description": (
+                "For BUY or SELL: the TOTAL dollar value this position should be worth "
+                "after your decision — not an incremental amount. Scale it to your "
+                "conviction: a strong BUY should target near max_position_notional, a "
+                "weak/moderate BUY a smaller fraction of it; a strong SELL should target "
+                "near 0 (full exit), a weak/moderate SELL a partial trim. Null for HOLD."
+            ),
+        },
     },
     "required": ["action", "confidence", "rationale", "target_notional"],
     "additionalProperties": False,
@@ -30,9 +39,14 @@ _DECISION_SCHEMA: dict[str, Any] = {
 _SYSTEM_PROMPT = (
     "You are a disciplined equity trading decision-maker for a paper-trading simulation. "
     "You receive technical indicators, news sentiment, current position, and hard risk "
-    "constraints for one ticker. Decide BUY, SELL, or HOLD. You cannot exceed the stated "
-    "risk constraints — they will be enforced regardless of your answer, so factor them "
-    "into your reasoning rather than ignoring them. Prefer HOLD when signals conflict."
+    "constraints for one ticker. Decide BUY, SELL, or HOLD, and state target_notional: "
+    "the TOTAL dollar value this position should be worth after your decision, scaled to "
+    "your conviction — not just max-or-zero. max_position_notional is a hard ceiling on "
+    "your target regardless of what you state; it will be enforced either way. An "
+    "existing position already above max_position_notional is NOT itself a reason to "
+    "SELL — that cap only limits how high your BUY target may go, never forces an exit. "
+    "Only propose SELL when the technical or sentiment evidence itself supports exiting, "
+    "and size the target to how strongly it does. Prefer HOLD when signals conflict."
 )
 
 
@@ -67,7 +81,8 @@ class DecisionAgent(AgentNode):
             f"headlines={sentiment.headlines}\n"
             f"Current position: {self._position_summary(position)}\n"
             f"Risk constraints: trading_halted={budget.trading_halted} "
-            f"({budget.halt_reason}), max_position_notional=${budget.max_position_notional:.2f}, "
+            f"({budget.halt_reason}), max_position_notional=${budget.max_position_notional:.2f} "
+            f"(caps additional BUYs only — not a reason to SELL an existing position), "
             f"remaining_exposure_budget=${budget.remaining_exposure:.2f}, "
             f"account_buying_power=${budget.account.buying_power:.2f}"
         )
