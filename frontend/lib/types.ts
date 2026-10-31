@@ -42,6 +42,13 @@ export interface PortfolioPoint {
   drawdown_pct: number;
 }
 
+export interface RunCycleResult {
+  ts: string;
+  market_open: boolean;
+  orders_enabled: boolean;
+  tickers: Record<string, unknown>[];
+}
+
 export interface Health {
   status: string;
   dry_run: boolean;

@@ -1,4 +1,6 @@
-import type { Account, AnalysisResult, Decision, Health, LogEntry, PortfolioPoint, Position } from "./types";
+import type {
+  Account, AnalysisResult, Decision, Health, LogEntry, PortfolioPoint, Position, RunCycleResult,
+} from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8682";
 
@@ -32,6 +34,7 @@ export const api = {
   portfolioHistory: (limit = 200) =>
     getJson<PortfolioPoint[]>(`/api/portfolio_history?limit=${limit}`),
   analyze: (symbol: string) => postJson<AnalysisResult>("/api/analyze", { symbol }),
+  runCycle: () => postJson<RunCycleResult>("/api/run_cycle", {}),
 };
 
 export function wsUrl(): string {

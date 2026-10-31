@@ -10,6 +10,7 @@ import { PositionsTable } from "@/components/PositionsTable";
 import { DecisionsTable } from "@/components/DecisionsTable";
 import { LiveLogFeed } from "@/components/LiveLogFeed";
 import { AnalysisDialog } from "@/components/AnalysisDialog";
+import { RunCycleButton } from "@/components/RunCycleButton";
 import type { LogEntry } from "@/lib/types";
 
 export default function DashboardPage() {
@@ -88,7 +89,15 @@ export default function DashboardPage() {
       </div>
 
       <div className="panel" style={{ marginBottom: 16 }}>
-        <h2>Recent decisions</h2>
+        <div className="panel-header">
+          <h2>Recent decisions</h2>
+          <RunCycleButton
+            onDone={() => {
+              decisions.refresh();
+              historicalLogs.refresh();
+            }}
+          />
+        </div>
         <DecisionsTable decisions={decisions.data ?? []} />
       </div>
 

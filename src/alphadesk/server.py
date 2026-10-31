@@ -18,7 +18,7 @@ from alphadesk.clients.redis_bus import EventBus
 from alphadesk.config import Settings, get_settings
 from alphadesk.db.base import Database
 from alphadesk.db.models import AgentLogEntry, Decision, PortfolioSnapshot
-from alphadesk.scheduler import Scheduler
+from alphadesk.scheduler import CycleInProgressError, Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -151,6 +151,17 @@ def create_app(
         if result is None:
             raise HTTPException(status_code=404, detail=f"no market data for {symbol}")
         return result
+
+    @app.post("/api/run_cycle")
+    async def run_cycle():
+        """Runs one full cycle now, even when the market is closed (orders only if open)."""
+        try:
+            return await scheduler.run_now()
+        except CycleInProgressError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except Exception as exc:
+            logger.exception("manual cycle failed")
+            raise HTTPException(status_code=502, detail=f"cycle failed: {exc}") from exc
 
     @app.websocket("/ws")
     async def ws_endpoint(websocket: WebSocket):

@@ -72,10 +72,12 @@ class TradingPipeline:
         return builder.compile()
 
     async def run_cycle(
-        self, tickers: list[str], now: datetime | None = None
+        self, tickers: list[str], now: datetime | None = None, orders_enabled: bool = True
     ) -> PipelineState:
         """`now` overrides the cycle timestamp, e.g. with a backtest's simulated clock."""
-        initial_state = PipelineState(cycle_ts=now or datetime.now(UTC), tickers=tickers)
+        initial_state = PipelineState(
+            cycle_ts=now or datetime.now(UTC), tickers=tickers, orders_enabled=orders_enabled
+        )
         # `ainvoke` returns a plain dict of the final channel values, not a PipelineState
         # instance — rebuild it explicitly rather than relying on that implicit shape.
         raw: dict = await self._graph.ainvoke(initial_state)
@@ -85,6 +87,7 @@ class TradingPipeline:
             positions=raw["positions"],
             risk_budget=raw["risk_budget"],
             ticker_states=raw["ticker_states"],
+            orders_enabled=initial_state.orders_enabled,
         )
 
 

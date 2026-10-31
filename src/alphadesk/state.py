@@ -68,6 +68,9 @@ class PipelineState:
     positions: dict[str, PositionSnapshot] = field(default_factory=dict)
     risk_budget: RiskBudget | None = None
     ticker_states: dict[str, TickerState] = field(default_factory=dict)
+    # False for manual runs while the market is closed: decide and record, but don't
+    # queue market orders that would fill at the next open, not at the analyzed price.
+    orders_enabled: bool = True
 
     def __post_init__(self) -> None:
         for ticker in self.tickers:

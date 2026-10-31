@@ -39,7 +39,7 @@ class ExecutionAgent(AgentNode):
             ts.risk_verdict = verdict
 
             order_id = None
-            if verdict.approved and verdict.approved_notional:
+            if verdict.approved and verdict.approved_notional and state.orders_enabled:
                 order_id = await self._submit(
                     ticker, ts.decision.action, verdict.approved_notional
                 )
@@ -54,6 +54,7 @@ class ExecutionAgent(AgentNode):
                 risk_approved=verdict.approved,
                 risk_reason=verdict.reason,
                 executed=ts.executed,
+                orders_enabled=state.orders_enabled,
             )
         return state
 

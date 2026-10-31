@@ -93,6 +93,25 @@ body {
   color: var(--text-dim);
 }
 
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.run-cycle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: right;
+}
+
 .stat-value {
   font-size: 22px;
   font-weight: 600;
@@ -136,6 +155,15 @@ th {
 
 .pill.approved { background: rgba(62, 207, 142, 0.15); color: var(--green); }
 .pill.blocked { background: rgba(232, 179, 57, 0.15); color: var(--amber); }
+
+.exec-marker {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 8px;
+  cursor: help;
+}
+.exec-marker.executed { color: var(--green); }
+.exec-marker.not-executed { color: var(--text-dim); }
 
 .log-feed {
   max-height: 360px;
