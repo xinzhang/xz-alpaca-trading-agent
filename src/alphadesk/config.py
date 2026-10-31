@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     alpaca_secret_key: str = Field(alias="ALPACA_SECRET_KEY")
     alpaca_paper: bool = Field(default=True, alias="ALPACA_PAPER")
     alpaca_data_feed: str = Field(default="IEX", alias="ALPACA_DATA_FEED")
+    # Pre/post-market (4:00-9:30, 16:00-20:00 ET) bars in the technical indicators.
+    include_extended_hours: bool = Field(default=False, alias="INCLUDE_EXTENDED_HOURS")
 
     # OpenAI
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
