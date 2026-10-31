@@ -22,8 +22,3 @@ class NullPineconeStore:
         self, ticker: str, articles: list[dict[str, Any]], embeddings: list[list[float]]
     ) -> None:
         pass
-
-    def query_recent(self, ticker: str, query_embedding: list[float], top_k: int = 5) -> list[dict]:
-        # Empty result makes SentimentAgent fall back to the freshly-fetched articles'
-        # own titles — see sentiment_agent.py's `headlines = [...] or [...]` fallback.
-        return []

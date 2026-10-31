@@ -46,7 +46,9 @@ _SYSTEM_PROMPT = (
     "existing position already above max_position_notional is NOT itself a reason to "
     "SELL — that cap only limits how high your BUY target may go, never forces an exit. "
     "Only propose SELL when the technical or sentiment evidence itself supports exiting, "
-    "and size the target to how strongly it does. Prefer HOLD when signals conflict."
+    "and size the target to how strongly it does. Prefer HOLD when signals conflict. "
+    "Sentiment label insufficient_news means no usable news was found: decide on the "
+    "technicals alone and treat it as missing evidence, not as neutral news."
 )
 
 

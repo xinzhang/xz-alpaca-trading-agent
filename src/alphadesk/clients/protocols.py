@@ -18,7 +18,3 @@ class VectorStore(Protocol):
     def upsert_articles(
         self, ticker: str, articles: list[dict[str, Any]], embeddings: list[list[float]]
     ) -> None: ...
-
-    def query_recent(
-        self, ticker: str, query_embedding: list[float], top_k: int = 5
-    ) -> list[dict]: ...

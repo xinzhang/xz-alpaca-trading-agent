@@ -1,4 +1,4 @@
-"""Thin wrapper around Pinecone: stores/retrieves news-headline embeddings per ticker."""
+"""Thin wrapper around Pinecone: archives news-article embeddings per ticker."""
 
 from typing import Any
 
@@ -45,15 +45,3 @@ class PineconeNewsStore:
             for article, embedding in zip(articles, embeddings, strict=True)
         ]
         self._index.upsert(vectors=vectors, namespace=ticker)
-
-    def query_recent(self, ticker: str, query_embedding: list[float], top_k: int = 5) -> list[dict]:
-        result = self._index.query(
-            namespace=ticker,
-            vector=query_embedding,
-            top_k=top_k,
-            include_metadata=True,
-        )
-        return [
-            {"score": match.score, **match.metadata}
-            for match in result.matches
-        ]

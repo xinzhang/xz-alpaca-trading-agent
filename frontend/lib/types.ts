@@ -1,5 +1,5 @@
 export type Action = "BUY" | "SELL" | "HOLD";
-export type SentimentLabel = "bullish" | "bearish" | "neutral";
+export type SentimentLabel = "bullish" | "bearish" | "neutral" | "insufficient_news";
 
 export interface Account {
   equity: number;

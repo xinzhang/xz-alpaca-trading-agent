@@ -108,32 +108,28 @@ function AnalysisReport({ result }: { result: AnalysisResult }) {
       <Section step={3} title="Sentiment agent — news">
         <Metrics
           items={[
-            ["Label", sentiment.label],
+            ["Label", sentiment.label.replace("_", " ")],
             ["Score", num(sentiment.score)],
-            ["Headlines", String(sentiment.headlines.length)],
+            ["Articles", String(sentiment.articles.length)],
           ]}
         />
         {sentiment.rationale && <p>{sentiment.rationale}</p>}
-        <div className="stat-label">Headlines the model read</div>
-        <Bullets items={sentiment.headlines} />
-        {sentiment.articles.length > 0 && (
-          <>
-            <div className="stat-label" style={{ marginTop: 10 }}>
-              Freshly fetched articles
-            </div>
-            <ul className="bullets">
-              {sentiment.articles.map((article) => (
-                <li key={article.url}>
-                  <a href={article.url} target="_blank" rel="noreferrer">
-                    {article.title}
-                  </a>
-                  {article.published_at && (
-                    <span className="stat-label"> · {article.published_at}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
+        <div className="stat-label">Articles the model read (last ~48h, newest first)</div>
+        {sentiment.articles.length === 0 ? (
+          <div className="stat-label">None.</div>
+        ) : (
+          <ul className="bullets">
+            {sentiment.articles.map((article) => (
+              <li key={article.url}>
+                <a href={article.url} target="_blank" rel="noreferrer">
+                  {article.title}
+                </a>
+                {article.published_at && (
+                  <span className="stat-label"> · {article.published_at}</span>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </Section>
 

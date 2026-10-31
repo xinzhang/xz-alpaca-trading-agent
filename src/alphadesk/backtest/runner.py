@@ -38,7 +38,9 @@ async def run_backtest(settings: Settings, config: BacktestConfig) -> BacktestRe
         # excluded even though the day's own close (which we're deciding against) already
         # reflects that day's full session. Use end-of-day so news filtering matches.
         container.clock.now = day.normalize() + pd.Timedelta(hours=23, minutes=59, seconds=59)
-        state = await container.pipeline.run_cycle(config.tickers)
+        state = await container.pipeline.run_cycle(
+            config.tickers, now=container.clock.now.to_pydatetime()
+        )
 
         summary = decision_summary(state)
         decisions_log.append({"date": day, "tickers": summary})

@@ -16,8 +16,9 @@ Signal -> Risk -> Sentiment -> Decision -> Execution
 - **Signal** — pulls recent OHLCV bars from Alpaca and computes RSI/SMA/EMA/Bollinger Bands per ticker.
 - **Risk** — reads real account state (equity, buying power, positions, drawdown from peak) and
   computes this cycle's hard-coded budget (max per-position size, max total exposure, drawdown halt).
-- **Sentiment** — fetches recent news per ticker via Tavily, embeds it (OpenAI), stores/retrieves it
-  in Pinecone, and classifies bullish/bearish/neutral.
+- **Sentiment** — fetches the last ~48h of news per ticker via Tavily (searching what an ETF tracks,
+  e.g. "gold price" for IAU, and dropping quote pages), archives it in Pinecone (OpenAI embeddings),
+  and classifies bullish/bearish/neutral — or insufficient_news when nothing fetched is real news.
 - **Decision** — one OpenAI call per ticker, given technical + sentiment + risk context, returns a
   structured BUY/SELL/HOLD + rationale. It only *proposes* — see below.
 - **Execution** — the last, hard-coded gate (`risk_rules.evaluate_order`). Enforces per-position and
